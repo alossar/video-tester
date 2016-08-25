@@ -8,7 +8,7 @@
 # A simple script to make use of the PSNR and SSIM methods
 
 import sys, os
-from VideoTester import YUVvideo
+from VideoTester import YUVVideo
 from VideoTester.measures import PSNR, SSIM
 
 if len(sys.argv) != 4:
@@ -28,17 +28,17 @@ def save_to_file(name, res):
       f.write('%i %f\n' % (frame, value))
 
 rawdata = {
-  'received' : YUVvideo(file1, (width, height, 'I420')),
-  'original' : YUVvideo(file2, (width, height, 'I420'))
+  'received' : YUVVideo(file1, (width, height, 'I420')),
+  'original' : YUVVideo(file2, (width, height, 'I420'))
 }
 
 psnr = PSNR((None, rawdata, None, None))
 ssim = SSIM((None, rawdata, None, None))
 
-print 'Calculating PSNR...'
+print 'Computing PSNR...'
 res = psnr.calculate()
 save_to_file('result_psnr.dat', res)
 
-print 'Calculating SSIM...'
+print 'Computing SSIM...'
 res = ssim.calculate()
 save_to_file('result_ssim.dat', res)
