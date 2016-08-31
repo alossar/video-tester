@@ -37,6 +37,8 @@ class VQmeter(Meter):
             self.measures.append(PSNRtoMOS(data))
         if 'miv' in selected:
             self.measures.append(MIV(data))
+        if 'tisi' in selected:
+            self.measures.append(TISI(data))
 
 class VQmeasure(Measure):
     '''
