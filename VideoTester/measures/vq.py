@@ -4,7 +4,7 @@
 ## Copyright 2011-2016 Iñaki Úcar <i.ucar86@gmail.com>
 ## This program is published under a GPLv3 license
 
-import math, cv
+import math, cv, cv2
 from itertools import izip
 from multiprocessing import cpu_count
 from .. import VTLOG
@@ -332,3 +332,52 @@ class MIV(VQmeasure):
         x = [x for x in range(0, len(y))]
         self.graph(x, y)
         return self.data
+        
+class TISI(VQmeasure):
+    '''
+    Temporal and Spatial Information of the received video and the reference video.`.
+
+    * Type: `plot`.
+    * Units: `Distortion in Interval`.
+    '''
+    def __init__(self, data):
+        VQmeasure.__init__(self, data)
+        self.data['name'] = 'TISI'
+        self.data['type'] = 'plot'
+        self.interval = 1
+        self.data['units'] = ('TI', 'SI')
+
+    def calculate(self):
+        size = self.yuv.frames
+        sizeref = self.yuvref.frames
+        
+        x = [0]*2
+        y = [0]*2
+        
+        prevframe1 = None
+        prevframe2 = None
+        
+        for i, (frame1, frame2) in enumerate(izip(self.yuv, self.yuvref)):
+            x[0] += doSI(frame1, self.yuv.width, self.yuv.height) / size
+            x[1] += doSI(frame2, self.yuvref.width, self.yuvref.height) / sizeref
+            if i != 0:
+                y[0] += doTI(frame1, prevframe1, self.yuv.width, self.yuv.height) / size
+                y[1] += doTI(frame2, prevframe2, self.yuvref.width, self.yuvref.height) / sizeref
+            prevframe1=frame1
+            prevframe2=frame2
+        self.graph(x,y)
+        return self.data
+
+    def doTI(frame, prevFrame, width, height):
+    	return np.std(frame-prevFrame, dtype=np.float64)
+    
+    def doSI(frame, width, height):
+    	return np.std(sobel(frame, width, height), dtype=np.float64)
+    
+    def sobel(frame, width, height):
+        #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
+        dx = cv2.Sobel(im,-1,1,0)
+        dy = cv2.Sobel(im,-1,0,1)
+        mag = np.hypot(dx,dy)
+        return mag
+
