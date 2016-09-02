@@ -4,7 +4,7 @@
 ## Copyright 2011-2016 Iñaki Úcar <i.ucar86@gmail.com>
 ## This program is published under a GPLv3 license
 
-import math, cv, cv2
+import math, cv, cv2, numpy as np
 from itertools import izip
 from multiprocessing import cpu_count
 from .. import VTLOG
