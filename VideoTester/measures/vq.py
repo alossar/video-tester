@@ -360,23 +360,29 @@ class TISI(VQmeasure):
         prevframe2 = None
         
         for i, (frame1, frame2) in enumerate(izip(self.yuv, self.yuvref)):
-            x[0] += self.doSI(frame1, self.yuv.width, self.yuv.height) / size
-            x[1] += self.doSI(frame2, self.yuvref.width, self.yuvref.height) / sizeref
+            x[0] += self.doSI(frame1)
+            x[1] += self.doSI(frame2)
             if i != 0:
-                y[0] += self.doTI(frame1, prevframe1, self.yuv.width, self.yuv.height) / size
-                y[1] += self.doTI(frame2, prevframe2, self.yuvref.width, self.yuvref.height) / sizeref
+                y[0] += self.doTI(frame1, prevframe1)
+                y[1] += self.doTI(frame2, prevframe2)
             prevframe1=frame1
             prevframe2=frame2
+        
+        x[0] = x[0]/size
+        x[1] = x[1]/sizeref
+        y[0] = y[0]/size
+        y[1] = y[1]/sizeref
+        
         self.graph(x,y)
         return self.data
 
-    def doTI(frame, prevFrame, width, height):
+    def doTI(frame, prevFrame):
     	return np.std(frame-prevFrame, dtype=np.float64)
     
-    def doSI(frame, width, height):
-    	return np.std(self.sobel(frame, width, height), dtype=np.float64)
+    def doSI(frame):
+    	return np.std(self.sobel(frame), dtype=np.float64)
     
-    def sobel(frame, width, height):
+    def sobel(frame):
         #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
         dx = cv2.Sobel(im,-1,1,0)
         dy = cv2.Sobel(im,-1,0,1)
