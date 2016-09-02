@@ -384,8 +384,8 @@ def doSI(frame):
 
 def sobel(frame):
     #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
-    dx = cv2.Sobel(im,-1,1,0)
-    dy = cv2.Sobel(im,-1,0,1)
+    dx = cv2.Sobel(frame,-1,1,0)
+    dy = cv2.Sobel(frame,-1,0,1)
     mag = np.hypot(dx,dy)
     return mag
 
