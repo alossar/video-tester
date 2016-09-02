@@ -360,11 +360,11 @@ class TISI(VQmeasure):
         prevframe2 = None
         
         for i, (frame1, frame2) in enumerate(izip(self.yuv, self.yuvref)):
-            x[0] += self.doSI(frame1['Y'])
-            x[1] += self.doSI(frame2['Y'])
+            x[0] += doSI(frame1['Y'])
+            x[1] += doSI(frame2['Y'])
             if i != 0:
-                y[0] += self.doTI(frame1['Y'], prevframe1['Y'])
-                y[1] += self.doTI(frame2['Y'], prevframe2['Y'])
+                y[0] += doTI(frame1['Y'], prevframe1['Y'])
+                y[1] += doTI(frame2['Y'], prevframe2['Y'])
             prevframe1=frame1
             prevframe2=frame2
         
@@ -376,16 +376,16 @@ class TISI(VQmeasure):
         self.graph(x,y)
         return self.data
 
-    def doTI(frame, prevFrame):
-    	return np.std(frame.astype(int)-prevFrame.astype(int), dtype=np.float64)
-    
-    def doSI(frame):
-    	return np.std(self.sobel(frame.astype(int)), dtype=np.float64)
-    
-    def sobel(frame):
-        #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
-        dx = cv2.Sobel(im,-1,1,0)
-        dy = cv2.Sobel(im,-1,0,1)
-        mag = np.hypot(dx,dy)
-        return mag
+def doTI(frame, prevFrame):
+	return np.std(frame.astype(int)-prevFrame.astype(int), dtype=np.float64)
+
+def doSI(frame):
+	return np.std(sobel(frame.astype(int)), dtype=np.float64)
+
+def sobel(frame):
+    #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
+    dx = cv2.Sobel(im,-1,1,0)
+    dy = cv2.Sobel(im,-1,0,1)
+    mag = np.hypot(dx,dy)
+    return mag
 
