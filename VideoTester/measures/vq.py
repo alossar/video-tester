@@ -141,24 +141,6 @@ def doSSIM(frame1, frame2):
 
     C++ to Python translation and adaptation by Iñaki Úcar
     '''
-    def array2cv(a):
-        dtype2depth = {
-            'uint8':   cv.IPL_DEPTH_8U,
-            'int8':    cv.IPL_DEPTH_8S,
-            'uint16':  cv.IPL_DEPTH_16U,
-            'int16':   cv.IPL_DEPTH_16S,
-            'int32':   cv.IPL_DEPTH_32S,
-            'float32': cv.IPL_DEPTH_32F,
-            'float64': cv.IPL_DEPTH_64F,
-        }
-        try:
-            nChannels = a.shape[2]
-        except:
-            nChannels = 1
-        cv_im = cv.CreateImageHeader((a.shape[1],a.shape[0]), dtype2depth[str(a.dtype)], nChannels)
-        cv.SetData(cv_im, a.tostring(), a.dtype.itemsize*nChannels*a.shape[1])
-        return cv_im
-
     C1 = 6.5025
     C2 = 58.5225
     img1_temp = array2cv(frame1)
@@ -384,8 +366,31 @@ def doSI(frame):
 
 def sobel(frame):
     #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
-    dx = cv2.Sobel(frame,-1,1,0)
-    dy = cv2.Sobel(frame,-1,0,1)
+    im = array2cv(frame)
+    nChan = im.nChannels
+    d = cv.IPL_DEPTH_32F
+    size = im.width, im.height
+    im_temp = cv.CreateImage(size, d, nChan)
+    dx = cv.Sobel(im,im_temp,1,0)
+    dy = cv.Sobel(im,im_temp,0,1)
     mag = np.hypot(dx,dy)
     return mag
+    
+def array2cv(a):
+        dtype2depth = {
+            'uint8':   cv.IPL_DEPTH_8U,
+            'int8':    cv.IPL_DEPTH_8S,
+            'uint16':  cv.IPL_DEPTH_16U,
+            'int16':   cv.IPL_DEPTH_16S,
+            'int32':   cv.IPL_DEPTH_32S,
+            'float32': cv.IPL_DEPTH_32F,
+            'float64': cv.IPL_DEPTH_64F,
+        }
+        try:
+            nChannels = a.shape[2]
+        except:
+            nChannels = 1
+        cv_im = cv.CreateImageHeader((a.shape[1],a.shape[0]), dtype2depth[str(a.dtype)], nChannels)
+        cv.SetData(cv_im, a.tostring(), a.dtype.itemsize*nChannels*a.shape[1])
+        return cv_im
 
