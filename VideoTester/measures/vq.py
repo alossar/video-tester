@@ -367,12 +367,12 @@ def doSI(frame):
 def sobel(frame):
     #frame = cv2.cvtColor(frame,cv2.COLOR_RGB2GRAY)
     im = array2cv(frame)
-    nChan = im.nChannels
-    d = cv.IPL_DEPTH_32F
-    size = im.width, im.height
-    im_temp = cv.CreateImage(size, d, nChan)
-    dx = cv.Sobel(im,im_temp,1,0)
-    dy = cv.Sobel(im,im_temp,0,1)
+    #nChan = im.nChannels
+    #d = cv.IPL_DEPTH_32F
+    #size = im.width, im.height
+    #im_temp = cv.CreateImage(size, d, nChan)
+    dx = cv2.Sobel(im,-1,1,0)
+    dy = cv2.Sobel(im,-1,0,1)
     mag = np.hypot(dx,dy)
     return mag
     
