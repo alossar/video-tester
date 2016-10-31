@@ -13,12 +13,10 @@ class YUVVideo:
     def __init__(self, file, (width, height, fmt)):
         '''
         **On init:** Call the proper parser.
-
         :param string file: Path to the file.
         :param int width: Frame width.
         :param int height: Frame height.
         :param string format: YUV format.
-
         .. note::
             Supported formats: I420.
         '''
@@ -66,10 +64,8 @@ class CodedVideo:
     def __init__(self, file, codec):
         '''
         **On init:** Call the proper parser.
-
         :param string file: Path to the file.
         :param string codec: Codec type.
-
         .. note::
             Supported formats: H263, H264, MPEG4 and Theora.
         '''

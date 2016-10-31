@@ -5,26 +5,24 @@
 ## Copyright 2011-2016 Iñaki Úcar <i.ucar86@gmail.com>
 ## This program is published under a GPLv3 license
 
-import sys, os, textwrap, argparse
+import sys
+import os
+import textwrap
+import argparse
 from VideoTester import VTLOG, __version__, __author__
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter,
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
         description=textwrap.dedent('''\
             VideoTester %s
-
               Video Quality Assessment Tool
               Visit https://github.com/Enchufa2/video-tester for support and updates
-
               Copyright 2011-2016 %s
               This program is published under a GPLv3 license
             ''' % (__version__, __author__)))
-    parser.add_argument(
-        '-c', '--conf', dest='conf', type=str, default='VT.conf',
+    parser.add_argument('-c', '--conf', dest='conf', type=str, default='VT.conf',
         help='configuration file (default: ./VT.conf)')
-    parser.add_argument(
-        '-v', '--verbose', dest='v', type=int, default=20,
+    parser.add_argument('-v', '--verbose', dest='v', type=int, default=20,
         help=textwrap.dedent('''\
             verbosity level (default: 20)
               CRITICAL = 50
@@ -36,8 +34,7 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(title='subcommands', dest='mode')
     parser_server = subparsers.add_parser('server', help='launch VT as server')
     parser_client = subparsers.add_parser('client', help='launch VT as client')
-    parser_client.add_argument(
-        '-g', '--gui', dest='gui', action='store_true',
+    parser_client.add_argument('-g', '--gui', dest='gui', action='store_true',
         help='launch graphical interface')
     args = parser.parse_args()
 
@@ -50,6 +47,10 @@ if __name__ == '__main__':
             server.serve_forever()
         except KeyboardInterrupt:
             pass
+    elif args.mode == 'standalone':
+        from VideoTester import VTStandalone
+        standalone = VTStandalone(args.conf)
+        standalone.run()
     else:
         if os.geteuid():
             VTLOG.error('You need administrator privileges to run this program as client')
@@ -62,3 +63,5 @@ if __name__ == '__main__':
             from VideoTester import VTClient
             client = VTClient(args.conf)
             client.run()
+
+

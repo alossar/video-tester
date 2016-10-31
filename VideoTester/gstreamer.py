@@ -11,7 +11,6 @@ from . import VTLOG, supported_codecs
 
 #Gst.debug_set_active(True)
 #Gst.debug_set_default_threshold(3)
-
 class RTSPServer:
 	'''
 	GStreamer RTSP server.
@@ -19,7 +18,6 @@ class RTSPServer:
 	def __init__(self, port):
 		'''
 		**On init:** Some initialization code.
-
 		:param int port: RTSP server port.
 		'''
 		#: GStreamer RTSP server instance.
@@ -29,7 +27,6 @@ class RTSPServer:
 	def addMedia(self, videos, bitrate, framerate, path):
 		'''
 		Add videos to the server.
-
 		:param list videos: List of available videos.
 		:param int bitrate: The bitrate (in kbps).
 		:param int framerate: The framerate (in fps).
@@ -37,14 +34,12 @@ class RTSPServer:
 		'''
 		for i, video in enumerate(videos):
 			for codec, items in supported_codecs.iteritems():
-				launch = 'filesrc location=%s/%s ! decodebin ! videorate ! video/x-raw,framerate=%s/1 ! %s bitrate=%s ! %s name=pay0' % (
-					path,
+				launch = 'filesrc location=%s/%s ! decodebin ! videorate ! video/x-raw,framerate=%s/1 ! %s bitrate=%s ! %s name=pay0' % (path,
 					video,
 					framerate,
 					items['encoder'],
 					items['bitrate_from_kbps'](bitrate),
-					items['rtppay']
-				)
+					items['rtppay'])
 				pool = GstRtspServer.RTSPAddressPool()
 				pool.add_range("224.3.0.0", "224.3.0.10", 5000, 5010, 10)
 				factory = GstRtspServer.RTSPMediaFactory()
@@ -69,7 +64,6 @@ class RTSPClient:
 	def __init__(self, path, codec, bitrate, framerate):
 		'''
 		**On init:** Some initialization code.
-
 		:param string path: Path for the output files.
 		:param string codec: Selected codec.
 		:param int bitrate: Selected bitrate.
@@ -83,7 +77,9 @@ class RTSPClient:
 		self.bitrate = bitrate
 		#: Selected framerate.
 		self.framerate = framerate
-		#: Dictionary of paths to the processed video files: ``{'original':[<compressed>, <yuv>], 'coded':[<compressed>, <yuv>], 'received':[<compressed>, <yuv>]}``.
+		#: Dictionary of paths to the processed video files:
+		#``{'original':[<compressed>, <yuv>], 'coded':[<compressed>, <yuv>],
+		#'received':[<compressed>, <yuv>]}``.
 		self.files = {'original':[], 'coded':[], 'received':[]}
 		#: Various caps recolected from the pipeline.
 		self.caps = {
@@ -100,10 +96,8 @@ class RTSPClient:
 	def __events(self, bus, msg):
 		'''
 		Event handler.
-
 		:param bus: Gstreamer bus object.
 		:param msg: Gstreamer message object.
-
 		:returns: True.
 		:rtype: boolean
 		'''
@@ -172,16 +166,13 @@ class RTSPClient:
 	def receive(self, url, proto):
 		'''
 		Connect to the RTSP server and receive the selected video (see :attr:`video`).
-
 		:param string url: RTSP server URL.
 		:param int proto: Transport protocol for the RTP transmission.
 		'''
 		VTLOG.info('Starting GStreamer receiver...')
-		self.pipeline = Gst.parse_launch('rtspsrc name=source ! tee name=t ! queue ! %s name=depay %s ! filesink name=sink1 t. ! queue ! decodebin ! videorate skip-to-first=True ! video/x-raw,framerate=%s/1 ! filesink name=sink2' % (
-			supported_codecs[self.codec]['rtpdepay'],
+		self.pipeline = Gst.parse_launch('rtspsrc name=source ! tee name=t ! queue ! %s name=depay %s ! filesink name=sink1 t. ! queue ! decodebin ! videorate skip-to-first=True ! video/x-raw,framerate=%s/1 ! filesink name=sink2' % (supported_codecs[self.codec]['rtpdepay'],
 			supported_codecs[self.codec]['add'],
-			self.framerate
-		))
+			self.framerate))
 		source = self.pipeline.get_by_name('source')
 		depay = self.pipeline.get_by_name('depay')
 		sink1 = self.pipeline.get_by_name('sink1')
@@ -213,7 +204,6 @@ class RTSPClient:
 	def makeReference(self, video):
 		'''
 		Make the reference videos.
-
 		:param string video: Path to the selected video.
 		'''
 		VTLOG.info('Making reference...')
@@ -226,12 +216,10 @@ class RTSPClient:
 		self.files['original'].append(location)
 		sink1.props.location = location
 		self.__play()
-		self.pipeline = Gst.parse_launch('filesrc name=source ! decodebin ! videorate ! video/x-raw,framerate=%s/1 ! %s bitrate=%s ! tee name=t ! queue %s ! filesink name=sink2 t. ! queue ! decodebin ! filesink name=sink3' % (
-			self.framerate,
+		self.pipeline = Gst.parse_launch('filesrc name=source ! decodebin ! videorate ! video/x-raw,framerate=%s/1 ! %s bitrate=%s ! tee name=t ! queue %s ! filesink name=sink2 t. ! queue ! decodebin ! filesink name=sink3' % (self.framerate,
 			supported_codecs[self.codec]['encoder'],
 			supported_codecs[self.codec]['bitrate_from_kbps'](self.bitrate),
-			supported_codecs[self.codec]['add']
-		))
+			supported_codecs[self.codec]['add']))
 		source = self.pipeline.get_by_name('source')
 		sink2 = self.pipeline.get_by_name('sink2')
 		sink3 = self.pipeline.get_by_name('sink3')
@@ -244,3 +232,6 @@ class RTSPClient:
 		sink3.props.location = location
 		self.__play()
 		VTLOG.info('Reference made')
+
+
+

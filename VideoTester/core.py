@@ -4,7 +4,12 @@
 ## Copyright 2011-2016 Iñaki Úcar <i.ucar86@gmail.com>
 ## This program is published under a GPLv3 license
 
-import os, ConfigParser, signal, pickle, time, socket
+import os
+import ConfigParser
+import signal
+import pickle
+import time
+import socket
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from xmlrpclib import ServerProxy
 from multiprocessing import Process
@@ -23,10 +28,8 @@ class VTBase:
     def __init__(self, conf=None):
         '''
         **On init:** Parse the `video` section.
-
         :param conf: Path to a configuration file.
         :type conf: string
-
         .. warning::
             This section MUST be present in the default configuration file
             and MUST contain the same videos at the client and the server.
@@ -47,7 +50,6 @@ class VTBase:
     def run(self):
         '''
         Do nothing.
-
         .. note::
             This method MUST be overwritten by the subclasses.
         '''
@@ -56,10 +58,8 @@ class VTBase:
     def parseConf(self, file, section):
         '''
         Extract a section from a configuration file.
-
         :param string file:
         :param string section: Path to the configuration file.
-
         :returns: A list of ``(name, value)`` pairs for each option in the given section.
         :rtype: list of tuples
         '''
@@ -74,7 +74,6 @@ class VTServer(VTBase, SimpleXMLRPCServer):
     def __init__(self, conf=None):
         '''
         **On init:** Some initialization code.
-
         :param conf: Path to a configuration file.
         :type conf: string
         '''
@@ -106,10 +105,8 @@ class VTServer(VTBase, SimpleXMLRPCServer):
         '''
         Run a subprocess for an RTSP server with a given bitrate and framerate (if not running)
         or add a client (if running).
-
         :param int bitrate: The bitrate (in kbps).
         :param int framerate: The framerate (in fps).
-
         :returns: The RTSP server port.
         :rtype: int
         '''
@@ -140,10 +137,8 @@ class VTServer(VTBase, SimpleXMLRPCServer):
         '''
         Stop an RTSP server with a given bitrate and framerate (if no remaining clients)
         or remove a client (if remaining clients).
-
         :param int bitrate: The bitrate (in kbps).
         :param int framerate: The framerate (in fps).
-
         :returns: True.
         :rtype: boolean
         '''
@@ -160,7 +155,6 @@ class VTServer(VTBase, SimpleXMLRPCServer):
     def __freePort(self):
         '''
         Find an unused port starting from :attr:`VideoTester.core.VTServer.port`.
-
         :returns: An unused port number.
         :rtype: int
         '''
@@ -183,7 +177,6 @@ class VTClient(VTBase):
     def __init__(self, conf=None):
         '''
         **On init:** Some initialization code.
-
         :param conf: Path to a configuration file.
         :type conf: string
         '''
@@ -226,7 +219,6 @@ class VTClient(VTBase):
          * Close connection.
          * Process data and extract information.
          * Run measures.
-
         :returns: A dictionary of video files received (see :attr:`VideoTester.gstreamer.RTSPClient.files`), a dictionary of caps (see :attr:`VideoTester.gstreamer.RTSPClient.caps`) and a list of results
         :rtype: list
         '''
@@ -244,18 +236,14 @@ class VTClient(VTBase):
         sniffer = Sniffer(self.conf['iface'],
                           self.conf['ip'],
                           '%s%s.cap' % (tempdir, num))
-        rtspclient = RTSPClient(
-            tempdir + num,
+        rtspclient = RTSPClient(tempdir + num,
             self.conf['codec'],
             self.conf['bitrate'],
-            self.conf['framerate']
-        )
-        url = 'rtsp://%s:%s/%s.%s' % (
-			self.conf['ip'],
+            self.conf['framerate'])
+        url = 'rtsp://%s:%s/%s.%s' % (self.conf['ip'],
 			rtspport,
 			self.conf['video'],
-			self.conf['codec']
-		)
+			self.conf['codec'])
         child = Process(target=sniffer.run)
         ret = True
         try:
@@ -285,8 +273,7 @@ class VTClient(VTBase):
             'caps': rtspclient.caps
         }
         packetdata = sniffer.parsePkts(self.conf['protocol'], rtspclient.caps)
-        codecdata, rawdata = self.__parseVideo(
-            rtspclient.files, rtspclient.caps, self.conf['codec'])
+        codecdata, rawdata = self.__parseVideo(rtspclient.files, rtspclient.caps, self.conf['codec'])
 
         results = []
         results.extend(QoSmeter(self.conf['qos'], packetdata).run())
@@ -309,7 +296,89 @@ class VTClient(VTBase):
         for x in videofiles.keys():
             if x != 'original':
                 codecdata[x] = CodedVideo(videofiles[x][0], codec)
-            rawdata[x] = YUVVideo(videofiles[x][1], (
-                caps['width'], caps['height'], caps['format']
-            ))
+            rawdata[x] = YUVVideo(videofiles[x][1], (caps['width'], caps['height'], caps['format']))
         return codecdata, rawdata
+
+
+class VTStandalone(VTBase):
+    '''
+    VT Standalone class.
+    '''
+    def __init__(self, conf=None):
+        '''
+        **On init:** Some initialization code.
+        :param conf: Path to a configuration file.
+        :type conf: string
+        '''
+        VTBase.__init__(self, conf)
+        #: Parsed configuration.
+        self.conf = dict(self.parseConf(self.CONF, 'standalone'))
+        self.conf['temp'] = os.path.abspath(self.conf['temp'])
+
+    def __get_tempdir(self):
+        tempdir = '%s/%s_%s_%s_%s_%s/' % (self.conf['temp'], self.conf['video'])
+        try:
+            os.makedirs(tempdir)
+        except OSError:
+            pass       
+        return tempdir
+
+    def run(self):
+        '''
+        Run the client and perform all the operations:
+         * Connect to the server.
+         * Receive video while sniffing packets.
+         * Close connection.
+         * Process data and extract information.
+         * Run measures.
+        :returns: A dictionary of video files received (see :attr:`VideoTester.gstreamer.RTSPClient.files`), a dictionary of caps (see :attr:`VideoTester.gstreamer.RTSPClient.caps`) and a list of results
+        :rtype: list
+        '''
+        VTLOG.info('Standalone running!')
+        try:
+            tempdir = self.__get_tempdir()
+        except Exception as e:
+            VTLOG.error(e)
+            return None
+              
+        codecdata = {}
+        packetdata = {}
+        rawdata = {}
+        caps = {
+			'width': None, 'height': None, 'format': None			# YUV
+		}
+
+        rawdata['original'] = self.__parseVideo('/'.join([self.path, self.conf['video']]), caps)
+
+        for received in self.received:
+            rawdata['received'] = self.__parseVideo('/'.join([self.path, dict(self.videos)[received]]), caps)
+
+            results = []
+            results.extend(VQmeter(self.conf['vq'], (conf, rawdata, codecdata, packetdata)).run())
+
+            VTLOG.info('Saving measures for ' + received)
+            for measure in results:
+                f = open(tempdir + dict(self.videos)[received] + '_' + measure['name'] + '.pkl', 'wb')
+                pickle.dump(measure, f)
+                f.close()
+        VTLOG.info('Standalone stopped!')
+
+        return results
+
+    def __parseVideo(self, videofile, caps):
+        VTLOG.info('Parsing videos...')
+        rawdata = {}
+        return YUVVideo(videofile, (caps['width'], caps['height'], caps['format']))
+
+
+
+
+
+
+
+
+
+
+
+
+
